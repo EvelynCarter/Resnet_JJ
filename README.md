@@ -1,158 +1,167 @@
+# 斗地主接口文档
+# 一、叫分
+## 接口名称
+叫分接口
+
+## 接口描述
+根据玩家手牌、叫分位置及历史叫分信息，计算游戏的叫分策略
+
+---
+
+## 请求信息
+
+### 请求方式
+`POST`
+
+### 请求URL
+`http://114.66.39.93:5000/sandou_act`
+
+### 请求头
+
+| 字段 | 值 | 说明 |
+|------|----|------|
+| `Accept` | `*/*` | 接收所有响应类型 |
+| `Accept-Encoding` | `gzip, deflate, br` | 支持的压缩编码 |
+| `Connection` | `keep-alive` | 保持连接 |
+| `Content-Type` | `application/json` | 请求体为JSON格式 |
+| `User-Agent` | `PostmanRuntime-ApipostRuntime/1.1.0` | 客户端标识 |
+
+---
+
+## 请求参数（JSON Body）
+
+| 字段 | 类型 | 必填 | 说明 | 示例 |
+|------|------|------|------|------|
+| `player_hand_cards` | `string` | 是 | **玩家手牌**，需用字符串传递整型数组（值范围：3-17,20,30） | `"[3,4,5,5,7,8,8,9,10,11,12,12,13,14,14,17,30]"` |
+| `passwd` | `string` | 是 | **接口密码**，固定为 `asdac` | `"asdac"` |
+| `bid_position` | `string` | 是 | **叫分位置**，取值范围：`first`/`second`/`third` | `"third"` |
+| `bid_info` | `string` | 是 | **历史叫分信息**，用字符串传递整型数组（顺序：第一位/第二位/第三位叫分记录）没有轮到叫分的为-1 | `"[0,0,0]" ` |
+
+---
+## 特殊说明
+```
+1.第一个叫分为first，第二个叫分为second，第三个叫分为third   
+2.没有轮到叫分的为-1
+对应牌面信息 = {
+    '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
+    '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12,
+    'K': 13, 'A': 14, '2': 17, 'X': 20, 'D': 30
+}
+
+```
+## 请求示例
 
 ```json
 {
-  "action": string,
-  "data": object
+  "player_hand_cards": "[3,4,5,5,7,8,8,9,10,11,12,12,13,14,14,17,30]",
+  "passwd": "asdac",
+  "bid_position": "third",
+  "bid_info": "[0,0,0]"
 }
 ```
-
-| 参数名 | 说明 |
-|-----|---------|
-| action | 上报类型，可选"init"/"play"，对应 初始化游戏/游戏进程上报 |
-| data | 上报数据，见下方 |
-
-上报数据：
-
-### 初始化游戏
-
-```json
+## curl代码
+```
+curl --request POST \
+  --url http://114.66.39.93:5000/sandou_act \
+  --header 'Accept: */*' \
+  --header 'Accept-Encoding: gzip, deflate, br' \
+  --header 'Connection: keep-alive' \
+  --header 'Content-Type: application/json' \
+  --header 'User-Agent: PostmanRuntime-ApipostRuntime/1.1.0' \
+  --data '{
+	"player_hand_cards": "[3, 4, 5, 5, 7, 8, 8, 9, 10, 11, 12, 12, 13, 14, 14, 17, 30]",
+	"passwd": "asdac",
+	"bid_position" :"third",
+	"bid_info":"[0,0,0]"
+}'
+```
+## 响应示例
+```
 {
-  "pid": string / int,
-  "three_landlord_cards": string,
-  "ai_amount": int,
-  "player_data":[
-    {
-      "model": string,
-      "hand_cards": string,
-      "position_code": int
-    },
-    {
-      "model": string,
-      "hand_cards": string,
-      "position_code": int
-    }
-  ]
+    "action": [
+            3
+	],
+	"code": 200 # 状态码
 }
 ```
 
-| 参数名 | 说明 | 示例 |
-|-----|---------|--------|
-| pid | 对局唯一标识，若为int类型会自动转为string | 10001 |
-| three_landlord_cards | 三张地主牌 | "444" |
-| ai_amount | AI玩家数量，为1或2 | 2 |
-| player_data | AI玩家数据，AI玩家数为1时只会读取数组中的第一个元素，内容元素见下方 | \ |
-| model | AI玩家使用的模型 | "WP" |
-| hand_cards | AI玩家的手牌 | "333444456789TJQKA2XD" |
-| position_code | AI玩家的位号 **0-地主上家，1-地主，2-地主下家** | 1 |
+# 二、出牌
 
-<details>
-<summary>完整示例</summary>
+## 接口描述
+根据当前游戏状态（玩家位置、手牌、地主牌、出牌序列、叫分信息等），计算玩家在当前回合的出牌策略。
 
-```json
+### 请求方式
+`POST`
+
+### 请求URL
+`http://114.66.39.93:5000/sandou_bid`
+
+### 请求头
+
+| 字段 | 值 | 说明 |
+|------|----|------|
+| `Accept` | `*/*` | 接收所有响应类型 |
+| `Accept-Encoding` | `gzip, deflate, br` | 支持的压缩编码 |
+| `Connection` | `keep-alive` | 保持连接 |
+| `Content-Type` | `application/json` | 请求体为JSON格式 |
+| `User-Agent` | `PostmanRuntime-ApipostRuntime/1.1.0` | 客户端标识 |
+
+---
+
+
+## 请求参数（JSON Body）
+
+| 字段 | 类型 | 必填 | 说明 | 示例值 |
+|------|------|------|------|--------|
+| `player_position` | `string` | 是 | **玩家位置**<br>`landlord`: 地主<br>`landlord_down`: 地主下家<br>`landlord_up`: 地主上家 | `"landlord"` |
+| `player_hand_cards` | `string` | 是 | **玩家当前手牌**<br>字符串格式的整型数组<br>牌值范围: 3-17,20,30 | `"[4,5,5,8,14,14,17,30]"` |
+| `three_landlord_cards` | `string` | 是 | **三张地主牌**<br>字符串格式的整型数组 | `"[3,13,20]"` |
+| `card_play_action_seq` | `string` | 是 | **出牌序列**<br>字符串格式的二维数组<br>`[]`表示不出牌 | `"[[9],[12],[13],[17],[],[],[4,5,6,7,8,9,10]]"` |
+| `bid_info` | `string` | 是 | **叫分信息**<br>字符串格式的整型数组<br>[第一位,第二位,第三位] | `"[1,0,0]"` |
+| `passwd` | `string` | 是 | **接口密码**<br>固定值 `asdac` | `"asdac"` |
+| `bid_position` | `string` | 是 | **叫分位置**<br>`first`/`second`/`third` | `"first"` |
+
+---
+
+
+## 特殊说明
+```
+地主时，card_play_action_seq为"[]"
+首轮为地主出牌时,手牌传20张
+对应牌面信息 = {
+    '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
+    '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12,
+    'K': 13, 'A': 14, '2': 17, 'X': 20, 'D': 30
+}
+```
+
+## 请求示例
+```
+curl --request POST \
+  --url http://114.66.39.93:5000/sandou_bid \
+  --header 'Accept: */*' \
+  --header 'Accept-Encoding: gzip, deflate, br' \
+  --header 'Connection: keep-alive' \
+  --header 'Content-Type: application/json' \
+  --header 'User-Agent: PostmanRuntime-ApipostRuntime/1.1.0' \
+  --data '{
+	"player_position": "landlord",
+	"player_hand_cards": "[4, 5, 5, 8, 14, 14, 17, 30]",
+	"three_landlord_cards": "[3, 13, 20]",
+	"card_play_action_seq": "[[9],[12],[13],[17],[],[],[4, 5, 6, 7, 8, 9, 10],[7, 8, 9, 10, 11, 12, 13],[],[],[3],[12],[],[],[3, 4, 5, 6, 7, 8, 9],[],[],[4, 11, 11, 11],[],[],[10, 10],[13,13]]",
+	"bid_info":"[1, 0, 0]",
+	"passwd": "asdac",
+	"bid_position" :"first"
+}'
+```
+
+## 响应示例
+```
 {
-  "action": "init",
-  "data": {
-    "three_landlord_cards": "444",
-    "pid": 10001,
-    "ai_amount": 2,
-    "player_data": [
-      {
-        "model": "WP",
-        "hand_cards": "333444456789TJQKA2XD",
-        "position_code": 1
-      },
-      {
-        "model": "WP",
-        "hand_cards": "3555666777888999T",
-        "position_code": 2
-      }
-    ]
-  }
+    "action": [
+            14,
+            15
+	],
+	"code": 200 # 状态码
 }
 ```
-
-</details>
-
-### 游戏进程上报
-
-也就是上报玩家出牌
-
-```json
-{
-  "pid": string / int,
-  "player": int,
-  "cards": string
-}
-```
-
-| 参数名 | 说明 | 示例 |
-|-----|---------|--------|
-| pid | 对局唯一标识，若为int类型会自动转为string | 10001 |
-| player | 出牌玩家位号 | 0 |
-| cards | 玩家出的牌，为空字符串则表示不要 | "TJQKA" |
-
-> 程序并不会检测玩家所出的牌是否遵循规则，请保证上报数据准确
-
-<details>
-<summary>完整示例</summary>
-
-```json
-{
-  "action": "play",
-  "data": {
-    "pid": 10001,
-    "player": 0,
-    "cards": "TJQKA"
-  }
-}
-```
-
-</details>
-
-## API响应
-
-```json
-{
-  "type": string,
-  "action": string,
-  "status": string,
-  "msg": string,
-  "data": object
-}
-```
-| 参数名 | 说明 |
-|-----|---------|
-| type | 响应类型，与上报数据的`action`相对应，上报"play"时为"step" |
-| action | 响应AI操作，尚未轮到AI出牌时为"receive"，AI出牌时为"play" |
-| status | 响应状态，为"ok"/"fail" |
-| msg | 错误信息，响应状态为"fail"时不为空 |
-| data | 响应数据，见下方 |
-
-响应数据：
-
-```json
-{
-  "pid": pid,
-  "game_over": boolen,
-  "play": [
-    {
-      "cards": array,
-      "confidence": string
-    },
-    {
-      "cards": array,
-      "confidence": string
-    }
-  ]
-}
-```
-
-| 参数名 | 说明 |
-|-----|---------|
-| pid | 对应对局标识 |
-| game_over | 对局是否结束，结束则为`true` |
-| play | AI出牌数据，action为"receive"时无此元素，元素内容见下方 |
-| cards | AI出的牌，为数组类型 |
-| confidence | AI的胜率估计 |
-
-
